@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import Link from "next/link";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 type Claim = { text: string; type: "factual" | "opinion"; needs_verification: boolean };
 
@@ -29,7 +29,7 @@ export default function AnalyzePage() {
 
   const mutation = useMutation({
     mutationFn: async (targetUrl: string) => {
-      const res = await fetch(`${API_BASE_URL}/analyze`, {
+      const res = await fetch(`${API_URL}/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8" },
         body: JSON.stringify({ url: targetUrl }),

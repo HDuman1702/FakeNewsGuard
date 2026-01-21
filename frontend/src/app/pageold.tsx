@@ -5,14 +5,14 @@ import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
 // hier wird dem Frontend gezeigt, wo Backend läuft
-const API_BASE_URL =
+const API_URL =
   process.env.NEXT_PUBLIC_API_URL!;
 
 export default function DashboardPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const res = await fetch(`${API_BASE_URL}/dashboard`);
+      const res = await fetch(`${API_URL}/dashboard`);
       if (!res.ok) throw new Error("Dashboard konnte nicht geladen werden");
       return res.json();
     },

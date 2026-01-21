@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL!;
+const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const CATEGORIES = [
     "Satire / Parodie",
@@ -85,7 +85,7 @@ export default function HomePage() {
     const { data, isLoading, error, refetch, isFetching } = useQuery({
         queryKey: ["dashboard", queryString],
         queryFn: async () => {
-            const res = await fetch(`${API_BASE_URL}/dashboard?${queryString}`);
+            const res = await fetch(`${API_URL}/dashboard?${queryString}`);
             if (!res.ok) throw new Error("Dashboard konnte nicht geladen werden");
             return res.json();
         },
@@ -97,7 +97,7 @@ export default function HomePage() {
     const { data: trendingTopics } = useQuery({
         queryKey: ["trendingTopics", 3],
         queryFn: async () => {
-            const res = await fetch(`${API_BASE_URL}/topics/trending?days=3&min_conf=70&limit=12`);
+            const res = await fetch(`${API_URL}/topics/trending?days=3&min_conf=70&limit=12`);
             if (!res.ok) return [];
             return (await res.json()) as { topic: string; count: number }[];
         },
