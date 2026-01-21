@@ -90,6 +90,18 @@ def dashboard(
 
     db = SessionLocal()
     try:
+        articles = (
+            db.query(Article)
+            .order_by(Article.created_at.desc().nulls_last())
+            .limit(limit)
+            .all()
+        )
+        return articles
+    except Exception as e:
+        log.error(f"DASHBOARD ERROR: {e}")
+       
+
+
         query = (
             db.query(Analysis, Article)
             .join(Article, Analysis.article_id == Article.id)
