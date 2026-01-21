@@ -7,4 +7,4 @@ lxml
 readability-lxml
 sqlalchemy
 feedparser
-appscheduler
+apscheduler
