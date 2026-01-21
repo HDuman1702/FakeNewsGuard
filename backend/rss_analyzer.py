@@ -18,25 +18,36 @@ async def run_rss_auto_analysis():
     print("RSS AUTO ANALYSIS START")
 
     db = SessionLocal()
-    try:
-        for name, feed_url in RSS_SOURCES.items():
-            print(f"RSS FEED: {name}")
 
+    for name, feed_url in RSS_SOURCES.items():
+        print(f"RSS FEED: {name}")
+
+        try:
             feed = feedparser.parse(feed_url)
+        except Exception as e:
+            log.error(f"RSS FEED PARSE FEHLER ({name}): {e}")
+            continue
 
-            for entry in feed.entries[:5]:
-                url = entry.get("link")
+        for entry in feed.entries:
+            link = getattr(entry, "link", None)
 
-                if not is_valid_url(url):
-                    print(f"RSS übersprungen (ungültige URL): {url}")
+            if not is_valid_url(link):
+                log.warning(f"Ungültige URL übersprungen: {link}")
+                continue
+
+            try:
+                article = parse_article(link)
+
+                if not article or not article.get("text"):
+                    log.warning(f"Leerer Artikel übersprungen: {link}")
                     continue
 
-                try:
-                    await analyze_and_store(url, db)
-                    print(f"RSS ANALYSE OK: {entry.get('title')}")
-                except Exception as e:
-                    print(f"RSS FEHLER bei {url}: {e}")
+                save_article(article)
 
-    finally:
-        db.close()
-        print("RSS AUTO ANALYSIS END")
+            except Exception as e:
+                log.error(f"RSS FEHLER bei {link}: {e}")
+                continue
+
+    db.close()
+    print("RSS AUTO ANALYSIS END")
+

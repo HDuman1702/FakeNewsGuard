@@ -177,6 +177,9 @@ async def analyze_and_store(url: str, db):
             db.refresh(article)
         except IntegrityError:
             db.rollback()
+            if not isinstance(url, str):
+                return None
+
             article = db.query(Article).filter(Article.url == url).first()
 
     # 🔹 2. Neue Analysis IMMER anlegen
