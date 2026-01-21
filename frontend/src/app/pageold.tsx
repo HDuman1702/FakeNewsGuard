@@ -6,7 +6,7 @@ import Link from "next/link";
 
 // hier wird dem Frontend gezeigt, wo Backend läuft
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export default function DashboardPage() {
   const { data, isLoading, error } = useQuery({
