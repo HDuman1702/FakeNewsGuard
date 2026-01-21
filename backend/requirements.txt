@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pydantic
+httpx
+beautifulsoup4
+lxml
+readability-lxml
+sqlalchemy
+feedparser
+appscheduler
