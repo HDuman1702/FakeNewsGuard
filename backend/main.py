@@ -1,8 +1,11 @@
 from fastapi import FastAPI, Query
+
 from rss_scheduler import start_scheduler
 from analysis_service import analyze_url
 from db import SessionLocal
 from models import Article, Analysis
+import logging
+log = logging.getLogger(__name__)
 import json
 from fastapi.middleware.cors import CORSMiddleware
 from urllib.parse import urlparse

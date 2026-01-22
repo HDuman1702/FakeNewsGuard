@@ -1,10 +1,13 @@
 import asyncio
+
 import feedparser
 from urllib.parse import urlparse
-
+import logging
+log = logging.getLogger(__name__)
 from db import SessionLocal
 from analysis_service import analyze_and_store
 from rss_sources import RSS_SOURCES
+from scraper import parse_article
 
 
 def is_valid_url(url: str) -> bool:
@@ -36,16 +39,10 @@ async def run_rss_auto_analysis():
                 continue
 
             try:
-                article = parse_article(link)
-
-                if not article or not article.get("text"):
-                    log.warning(f"Leerer Artikel übersprungen: {link}")
-                    continue
-
-                save_article(article)
+               analyze_and_store(link)
 
             except Exception as e:
-                log.error(f"RSS FEHLER bei {link}: {e}")
+                log.error(f"ANALYSE FEHLGESCHLAGEN FÜR {link}: {e}")
                 continue
 
     db.close()

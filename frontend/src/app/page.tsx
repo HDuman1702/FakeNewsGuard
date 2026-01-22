@@ -265,7 +265,7 @@ export default function HomePage() {
                                     </td>
                                     <td className="p-3">
                                         <div className="space-y-1">
-                                            <a className="underline text-sky-400 break-words" href={item.url} target="_blank" rel="noreferrer">
+                                            <a className="underline text-sky-400 wrap-break-words" href={item.url} target="_blank" rel="noreferrer">
                                                 {item.result?.title || item.url}
                                             </a>
                                             <div className="text-xs text-slate-500 break-all">{item.url}</div>
