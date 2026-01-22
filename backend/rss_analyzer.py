@@ -9,6 +9,8 @@ from analysis_service import analyze_and_store
 from rss_sources import RSS_SOURCES
 from scraper import parse_article
 
+def parse_article(url: str):
+    return None
 
 def is_valid_url(url: str) -> bool:
     if not url:
