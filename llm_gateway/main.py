@@ -63,6 +63,9 @@ ENTSCHEIDUNGSREGELN:
 - Wenn Clickbait oder Irreführend dominiert → uncertain
 - Seriöse Nachricht → likely_real
 
+ANTWORTE AUSSCHLIESSLICH MIT GÜLTIGEM JSON.
+KEIN TEXT, KEINE ERKLÄRUNG, KEIN MARKDOWN.
+
 """
 
 
@@ -121,15 +124,15 @@ def _extract_json_from_text(s: str) -> Optional[Dict[str, Any]]:
 async def _call_ollama(text: str) -> str:
     url = f"{LLM_BASE_URL}/api/generate"
     payload = {
-        "model": LLM_MODEL,
-        "prompt": f"{SYSTEM_PROMPT}\n\nTEXT:\n{text}\n",
-        "stream": False,
-        "format": "json",
-        "options": {
-            "temperature": 0.2,
-            "num_predict": 250,
-        },
-    }
+    "model": LLM_MODEL,
+    "prompt": f"{SYSTEM_PROMPT}\n\nANTWORT NUR ALS JSON!\n\n{text}",
+    "stream": False,
+    "options": {
+        "temperature": 0.2,
+        "num_predict": 300,
+    },
+}
+
     async with httpx.AsyncClient(timeout=HTTP_TIMEOUT) as client:
         r = await client.post(url, json=payload)
         r.raise_for_status()

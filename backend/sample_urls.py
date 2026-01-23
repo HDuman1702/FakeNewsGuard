@@ -5,7 +5,9 @@
 #]
 
 SAMPLE_URLS = [
-    "https://example.com",
-    "https://de.wikipedia.org/wiki/Fake_News",
-    "https://www.tagesschau.de/faktenfinder/",
+     "https://www.tagesschau.de/xml/rss2",
+    "https://newsfeed.zeit.de/index",
+     "https://www.spiegel.de/schlagzeilen/index.rss",
+     "https://rss.sueddeutsche.de/rss/Topthemen",
+     "https://www.faz.net/rss/aktuell/"
 ]

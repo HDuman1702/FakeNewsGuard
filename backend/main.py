@@ -1,29 +1,38 @@
 from fastapi import FastAPI, Query
-
-from rss_scheduler import start_scheduler
+#from backend.Arss_scheduler import start_scheduler
 from analysis_service import analyze_url
-from db import SessionLocal
+from db import SessionLocal, engine
 from models import Article, Analysis
+import models
 import logging
 log = logging.getLogger(__name__)
 import json
 from fastapi.middleware.cors import CORSMiddleware
 from urllib.parse import urlparse
 from sqlalchemy import func
+from sample_urls import SAMPLE_URLS
+from datetime import datetime
+import os
 
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="FakeNewsGuard Backend")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        
-        "https://fakenewsguard-ui.onrender.com"
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://fakenewsguard-ui.onrender.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+LLM_ENABLED = os.getenv("LLM_ENABLED", "false").lower() == "true"
+LLM_GATEWAY_URL = os.getenv("LLM_GATEWAY_URL")  # z. B. http://host:8001
 
 
 
@@ -80,103 +89,31 @@ def health():
 
 
 
+from sample_urls import SAMPLE_URLS
+
 @app.get("/dashboard")
-def dashboard(
-    q: str | None = Query(None),
-    categories: str | None = Query(None),
-    min_conf: int = Query(0),
-    only_failed: bool = Query(False),
-    sort: str = Query("created_at"),
-    order: str = Query("desc"),
-    limit: int = Query(50),
-):
+async def dashboard(limit: int = 5):
+    urls = SAMPLE_URLS[:limit]
+    now = datetime.utcnow().isoformat()
 
-    db = SessionLocal()
-    try:
-        articles = (
-            db.query(Article)
-            .order_by(Article.created_at.desc().nulls_last())
-            .limit(limit)
-            .all()
-        )
-        return articles
-    except Exception as e:
-        log.error(f"DASHBOARD ERROR: {e}")
-       
+    results = []
+    for url in urls:
+        res = await analyze_url(url)
+        results.append({
+            "url": url,
+            "analyzed_at": now,
+            "source_domain": urlparse(url).netloc,
+            "result": res
+        })
+
+    return results
 
 
-        query = (
-            db.query(Analysis, Article)
-            .join(Article, Analysis.article_id == Article.id)
-        )
-
-        #  Suche
-        if q:
-            query = query.filter(
-            Article.title.ilike(f"%{q}%") |
-            Article.url.ilike(f"%{q}%")
-        )
-
-        #  Min Confidence
-        if min_conf:
-            query = query.filter(Analysis.confidence >= min_conf)
-
-        #  Nur fehlerhafte
-        if only_failed:
-            query = query.filter(Analysis.label != "likely_real")
-
-        # Kategorien
-        if categories:
-            cat_list = [c.strip() for c in categories.split(",")]
-            query = query.filter(Analysis.category.in_(cat_list))
-
-        #  Sortierung
-        sort_col = Analysis.created_at
-        if sort == "confidence":
-            sort_col = Analysis.confidence
-        elif sort == "word_count":
-            sort_col = Article.word_count
-        else:
-            sort_col = Analysis.created_at
-
-       
-
-        if order == "desc":
-            sort_col = sort_col.desc()
-        else:
-            sort_col = sort_col.asc()
-
-        rows = query.order_by(sort_col).limit(limit).all()
 
 
-        
-
-        result = []
-        for analysis, article in rows:
-            result.append({
-                "url": article.url,
-                "analyzed_at": analysis.created_at.isoformat(),
-                "source_domain": urlparse(article.url).netloc,
-                "result": {
-                    "label": analysis.label,
-                    "confidence": int(analysis.confidence),
-                    "category": analysis.category,
-                    "reasoning_summary": analysis.reasoning_summary,
-                    "red_flags": json.loads(analysis.red_flags) if analysis.red_flags else [],
-                    "title": article.title,
-                    "word_count": article.word_count,
-                    "excerpt": article.text[:280] if article.text else "",
-                 }
-            })
-
-        return result
-
-    finally:
-        db.close()
-
-@app.on_event("startup")
-async def startup():
-    start_scheduler()
+#@app.on_event("startup")
+#async def startup():
+ #   start_scheduler()
 
 @app.get("/topics/trending")
 def trending_topics(days: int = 3, min_conf: int = 70, limit: int = 10):

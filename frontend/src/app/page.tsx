@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL = "http://127.0.0.1:8000";
 
 const CATEGORIES = [
     "Satire / Parodie",
@@ -85,7 +85,7 @@ export default function HomePage() {
     const { data, isLoading, error, refetch, isFetching } = useQuery({
         queryKey: ["dashboard", queryString],
         queryFn: async () => {
-            const res = await fetch(`${API_URL}/dashboard?${queryString}`);
+            const res = await fetch(`${API_BASE_URL}/dashboard?${queryString}`);
             if (!res.ok) throw new Error("Dashboard konnte nicht geladen werden");
             return res.json();
         },
@@ -97,7 +97,7 @@ export default function HomePage() {
     const { data: trendingTopics } = useQuery({
         queryKey: ["trendingTopics", 3],
         queryFn: async () => {
-            const res = await fetch(`${API_URL}/topics/trending?days=3&min_conf=70&limit=12`);
+            const res = await fetch(`${API_BASE_URL}/topics/trending?days=3&min_conf=70&limit=12`);
             if (!res.ok) return [];
             return (await res.json()) as { topic: string; count: number }[];
         },
@@ -150,7 +150,7 @@ export default function HomePage() {
                 <div className="flex items-start justify-between gap-3">
                     <div>
                         <h1 className="text-3xl font-bold tracking-tight">FakeNewsGuard</h1>
-                        <p className="text-sm text-slate-300">Dashboard (DB-basiert) + URL-Analyse. Filter- und Sortierbar.</p>
+                        <p className="text-sm text-slate-300"> Automatisches News-Dashboard mit On-Demand-Analyse und manueller URL-Prüfung.</p>
                     </div>
 
                     <div className="flex items-center gap-3">
@@ -172,6 +172,8 @@ export default function HomePage() {
                         >
                             {isFetching ? "Aktualisiere..." : "Aktualisieren"}
                         </button>
+
+
 
                         {refreshInfo && (
                             <span className="inline-block mt-2 rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">
@@ -284,9 +286,9 @@ export default function HomePage() {
                                             ) : null}
                                         </div>
                                     </td>
-                                    <td className="p-3 text-slate-300">{item.result.category ?? "—"}</td>
-                                    <td className="p-3 text-slate-200">{item.result.confidence}%</td>
-                                    <td className="p-3 text-slate-200">{item.result.word_count}</td>
+                                    <td className="p-3 text-slate-300">{item.result?.category ?? "—"}</td>
+                                    <td className="p-3 text-slate-200">{item.result?.confidence !== null ? `${item.result.confidence}%` : "—"}</td>
+                                    <td className="p-3 text-slate-200">{item.result?.word_count ?? 0}</td>
                                 </tr>
                             ))}
                         </tbody>

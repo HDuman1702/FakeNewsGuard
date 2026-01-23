@@ -1,7 +1,7 @@
 import asyncio
 import re
 from dataclasses import dataclass
-
+from urllib.parse import urlparse
 import httpx
 from bs4 import BeautifulSoup
 from readability import Document
@@ -108,24 +108,59 @@ def extract_main_text(url: str, html: str) -> ScrapedPage:
 def extract_article(html: str, url: str):
     soup = BeautifulSoup(html, "html.parser")
 
-    # Titel
+    # -------------------------
+    # 1. Störende Layout-Elemente entfernen
+    # -------------------------
+    for tag in soup(["script", "style", "nav", "footer", "header", "aside", "noscript"]):
+        tag.decompose()
+
+    # -------------------------
+    # 2. Titel-Extraktion (Prioritäten!)
+    # -------------------------
     title = ""
+
     og_title = soup.find("meta", property="og:title")
     if og_title and og_title.get("content"):
-        title = og_title["content"]
-    elif soup.title:
-        title = soup.title.text.strip()
+        title = og_title["content"].strip()
+    else:
+        twitter_title = soup.find("meta", attrs={"name": "twitter:title"})
+        if twitter_title and twitter_title.get("content"):
+            title = twitter_title["content"].strip()
+        else:
+            h1 = soup.find("h1")
+            if h1:
+                title = h1.get_text(strip=True)
+            elif soup.title:
+                title = soup.title.get_text(strip=True)
 
-    # Text aus <p>-Tags
-    paragraphs = [p.get_text(" ", strip=True) for p in soup.find_all("p")]
-    text = " ".join(paragraphs)
+    # -------------------------
+    # 3. Text-Extraktion (Artikel bevorzugen)
+    # -------------------------
+    article_tag = soup.find("article")
 
-    # 🔁 FALLBACK: Meta-Description
-    if len(text.split()) < 20:
+    if article_tag:
+        text = article_tag.get_text(" ", strip=True)
+    else:
+        paragraphs = [p.get_text(" ", strip=True) for p in soup.find_all("p")]
+        text = " ".join(paragraphs)
+
+    # Whitespace normalisieren
+    text = re.sub(r"\s+", " ", text).strip()
+
+    # -------------------------
+    # 4. Fallback: Meta-Description
+    # -------------------------
+    if len(text.split()) < 40:
         meta_desc = soup.find("meta", attrs={"name": "description"})
         if meta_desc and meta_desc.get("content"):
-            text = meta_desc["content"]
+            text = meta_desc["content"].strip()
 
+    # -------------------------
+    # 5. Excerpt erzeugen
+    # -------------------------
     excerpt = text[:300]
-    return title or "(unbekannt)", text or "", excerpt or ""
+
+    return title, text, excerpt
+
+   
 
