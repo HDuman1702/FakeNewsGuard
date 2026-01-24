@@ -43,8 +43,11 @@ type AnalysisResult = {
 type DashboardItem = {
     url: string;
     source_domain?: string;
+    domain?: string;
     analyzed_at?: string;
-    result: AnalysisResult;
+    result: AnalysisResult & {
+        source_domain?: string;
+    };
 
 };
 
@@ -257,7 +260,7 @@ export default function HomePage() {
                             </tr>
                         </thead>
                         <tbody>
-                            {(data ?? []).map((item: any, index: number) => (
+                            {(data ?? []).map((item: DashboardItem, index: number) => (
                                 <tr key={`${item.url}-${index}`} className="border-t border-slate-800 bg-slate-900 align-top">
                                     <td className="p-3 whitespace-nowrap text-slate-400">
                                         {item.analyzed_at ? new Date(item.analyzed_at).toLocaleString() : "—"}
